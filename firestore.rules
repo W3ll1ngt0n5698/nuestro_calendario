@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Solo pueden entrar estos dos correos (cambia los dos de abajo por los vuestros)
+    function permitido() {
+      return request.auth != null
+        && request.auth.token.email in ['samuvperez1910@gmail.com', 'luciagilgom@.com'];
+    }
+
+    match /events/{id}  { allow read, write: if permitido(); }
+    match /todos/{id}   { allow read, write: if permitido(); }
+    match /meta/{id}    { allow read, write: if permitido(); }
+
+    // Cada persona solo puede escribir en su propio documento de cartas
+    match /cartas/{uid} {
+      allow read: if permitido();
+      allow write: if permitido() && request.auth.uid == uid;
+    }
+    match /perfiles/{uid} {
+      allow read: if permitido();
+      allow write: if permitido() && request.auth.uid == uid;
+    }
+  }
+}
