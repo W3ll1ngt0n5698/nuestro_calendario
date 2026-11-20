@@ -357,6 +357,27 @@ html[data-glass="on"] .scrim{background:color-mix(in srgb,var(--scrim) 70%,trans
 html[data-glass="on"] input[type=text],html[data-glass="on"] input[type=password],html[data-glass="on"] input[type=date],html[data-glass="on"] input[type=time],html[data-glass="on"] textarea{background:color-mix(in srgb,var(--surface) 80%,transparent)}
 html[data-glass="on"] .login-box{background:var(--surface);-webkit-backdrop-filter:blur(24px) saturate(1.7);backdrop-filter:blur(24px) saturate(1.7);border:1px solid var(--line);border-radius:28px;padding:28px 22px;box-shadow:var(--gl-shadow),var(--gl-hi)}
 @media (prefers-reduced-transparency: reduce){html[data-glass="on"] *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
+
+/* ===== Pestañas redondas con indicador deslizante ===== */
+.tabs{position:relative;display:block;padding:5px;border-radius:999px;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.tabbtns{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.tabs button,.tabs button[aria-selected="true"]{background:transparent;border-radius:999px;min-height:46px;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--on-rose)}
+.tabs .ind{position:absolute;z-index:0;left:5px;top:5px;bottom:5px;width:calc((100% - 10px)/3);border-radius:999px;background:var(--rose);
+  transition:transform .42s cubic-bezier(.32,1.25,.4,1);box-shadow:0 4px 14px color-mix(in srgb,var(--rose) 40%,transparent)}
+.tabs.drag .ind{transition:none;transform-origin:center}
+html[data-glass="on"] .tabs button[aria-selected="true"]{box-shadow:none}
+html[data-glass="on"] .tabs .ind{box-shadow:0 4px 16px color-mix(in srgb,var(--rose) 45%,transparent),inset 0 1px 0 rgba(255,255,255,.45)}
+.panel{animation:panelin .34s cubic-bezier(.2,.8,.2,1)}
+@keyframes panelin{from{opacity:0;transform:translateX(calc(var(--dx,0)*30px))}to{opacity:1;transform:none}}
+/* Interruptor estilo iPhone: la bolita se estira al pulsar */
+.switch{width:56px;height:34px;border-radius:17px;transition:background-color .25s ease}
+.switch::after{top:2px;left:2px;width:30px;height:30px;border-radius:15px;
+  transition:transform .3s cubic-bezier(.34,1.3,.5,1),width .25s cubic-bezier(.34,1.3,.5,1)}
+.switch[aria-pressed="true"]::after{transform:translateX(22px)}
+.switch:active::after{width:38px}
+.switch[aria-pressed="true"]:active::after{transform:translateX(14px)}
+.switch:active{transform:none}
 </style>
 
 <div class="login" id="login" hidden><div class="login-box"><img src="icons/icon-180.png" alt=""><h2>Nuestro calendario</h2><p>Entra con tu correo y tu contraseña.</p><form id="lform"><label for="lemail">Correo</label><input type="text" id="lemail" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off"><label for="lpass">Contraseña</label><input type="password" id="lpass" autocomplete="current-password"><button class="btn main" type="submit">Entrar</button></form><p class="err" id="lerr" role="alert"></p></div></div>
@@ -373,7 +394,7 @@ html[data-glass="on"] .login-box{background:var(--surface);-webkit-backdrop-filt
 
   <section class="daily" id="daily" aria-label="Mensaje de hoy"></section>
 
-  <div class="tabs" role="tablist" id="tabs" aria-label="Secciones"></div>
+  <div class="tabs" role="tablist" id="tabs" aria-label="Secciones"><i class="ind" id="ind"></i><div class="tabbtns" id="tabbtns"></div></div>
 
   <section class="panel" id="p-cal" role="tabpanel">
     <div class="sec" id="cd"></div>
@@ -625,10 +646,12 @@ function renderDaily(){
 function renderTabs(){
   var u=unreadCount();
   var defs=[['cal','Calendario'],['lista','Por hacer'],['cartas','Cartas']];
-  document.getElementById('tabs').innerHTML=defs.map(function(d){
+  document.getElementById('tabbtns').innerHTML=defs.map(function(d){
     return '<button type="button" role="tab" data-action="tab" data-tab="'+d[0]+'" aria-selected="'+(state.tab===d[0])+'">'+d[1]+
       (d[0]==='cartas'&&u?'<span class="pip" aria-label="'+u+(u>1?' cartas nuevas':' carta nueva')+'"></span>':'')+'</button>';
   }).join('');
+  var ix=['cal','lista','cartas'].indexOf(state.tab);
+  if(!tabDrag){document.getElementById('ind').style.transform='translateX('+(ix*100)+'%)';}
   document.getElementById('p-cal').hidden=state.tab!=='cal';
   document.getElementById('p-lista').hidden=state.tab!=='lista';
   document.getElementById('p-cartas').hidden=state.tab!=='cartas';
@@ -716,7 +739,7 @@ function renderTodos(){
   var total=state.todos.length,done=state.todos.filter(function(t){return t.done;}).length;
   var pend=state.todos.filter(function(t){return !t.done;});
   var dn=state.todos.filter(function(t){return t.done;}).sort(function(a,b){return (b.doneOn||'').localeCompare(a.doneOn||'');});
-  var h='<div><h3>Cosas por hacer juntos</h3><p class="lead">Lo que queréis vivir. Marcadlo cuando lo hagáis.</p>'+
+  var h='<div><h3>Cosas por hacer juntos</h3>'+
     '<form class="add" id="todo-form" autocomplete="off"><input type="text" id="todo-in" maxlength="80" placeholder="Escribe un plan..." aria-label="Nueva cosa por hacer"><button class="btn main" type="submit">Añadir</button></form></div>';
   if(!state.loaded){
     h+='<p class="empty">Cargando vuestra lista...</p>';
@@ -731,7 +754,7 @@ function renderTodos(){
         '<button class="xb" type="button" data-action="todo-del" data-id="'+esc(t.id)+'" aria-label="Borrar: '+esc(t.text)+'">'+CROSS+'</button>')+'</div>';
     }).join('')+'</div>';
   }else{
-    h+='<p class="empty">La lista está vacía. Escribe el primer plan arriba y lo verá también la otra persona.</p>';
+
   }
   if(state.todos.some(function(t){return t.example;})){h+=exBox('todos','Las cosas con la etiqueta «Ejemplo» están para que veas cómo queda. Bórralas cuando quieras.');}
   box.innerHTML=h;
@@ -862,7 +885,7 @@ function renderSheet(noFocus){
     h+='<h4 tabindex="-1" id="sh-title">Ajustes</h4><p class="sub">Estos cambios son solo de este móvil: cada uno elige los suyos.</p>';
     h+='<label>Color</label><div class="swatches">'+Object.keys(PALETAS).map(swatchHtml).join('')+'</div>';
     h+='<label>Letra</label><div class="fonts">'+Object.keys(FUENTES).map(fontHtml).join('')+'</div>';
-    h+='<label>Aspecto</label><div class="swrow"><div><strong>Efecto cristal</strong><p>Transparencias y desenfoque, como en el iPhone</p></div><button type="button" class="switch" role="switch" data-action="glass" aria-pressed="'+look.glass+'" aria-label="Efecto cristal"></button></div>';
+    h+='<label>Aspecto</label><div class="swrow"><div><strong>Efecto cristal</strong></div><button type="button" class="switch" role="switch" data-action="glass" aria-pressed="'+look.glass+'" aria-label="Efecto cristal"></button></div>';
     h+='<div class="row"><button class="btn main" data-action="close">Listo</button></div>';
   }else if(s.mode==='perfil'){
     var shown=state.draftPhoto!==undefined?state.draftPhoto:state.photo;
@@ -1079,7 +1102,7 @@ document.addEventListener('click',function(ev){
     var v=state.view,m=v.m+(a==='next'?1:-1),y=v.y;
     if(m<0){m=11;y--;}if(m>11){m=0;y++;}
     state.view={y:y,m:m};renderMonth();
-  }else if(a==='tab'){state.tab=t.dataset.tab;state.confirmTodo=null;render();}
+  }else if(a==='tab'){setTab(t.dataset.tab);}
   else if(a==='day'){openDay(t.dataset.date);}
   else if(a==='new'){
     var d=t.dataset.date;
@@ -1231,6 +1254,59 @@ try{
   if(mq.addEventListener){mq.addEventListener('change',paintThemeBtn);}
 }catch(e){}
 paintThemeBtn();
+
+
+/* ===== Cambiar de pestaña deslizando ===== */
+var TABS=['cal','lista','cartas'],tabDrag=null;
+function setTab(k){
+  if(k===state.tab){renderTabs();return;}
+  var dir=TABS.indexOf(k)>TABS.indexOf(state.tab)?1:-1;
+  document.documentElement.style.setProperty('--dx',String(dir));
+  state.tab=k;state.confirmTodo=null;render();
+  try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
+}
+(function(){
+  var tabs=document.getElementById('tabs'),ind=document.getElementById('ind');
+  function pos(ev){
+    var r=tabs.getBoundingClientRect(),w=(r.width-10)/3;
+    return {f:Math.max(0,Math.min(2,(ev.clientX-r.left-5)/w-0.5)),w:w};
+  }
+  tabs.addEventListener('pointerdown',function(ev){
+    if(ev.button>0){return;}
+    tabDrag={x:ev.clientX,moved:false,id:ev.pointerId};
+    try{tabs.setPointerCapture(ev.pointerId);}catch(e){}
+  });
+  tabs.addEventListener('pointermove',function(ev){
+    if(!tabDrag){return;}
+    if(!tabDrag.moved&&Math.abs(ev.clientX-tabDrag.x)>6){tabDrag.moved=true;tabs.classList.add('drag');}
+    if(tabDrag.moved){var p=pos(ev),n=Math.round(p.f);ind.style.transform='translateX('+(p.f*100)+'%)';
+      document.querySelectorAll('#tabbtns button').forEach(function(bt,i){bt.setAttribute('aria-selected',String(i===n));});}
+  });
+  function end(ev,cancel){
+    if(!tabDrag){return;}
+    var p=pos(ev),was=tabDrag;tabDrag=null;
+    tabs.classList.remove('drag');
+    try{tabs.releasePointerCapture(was.id);}catch(e){}
+    if(cancel){renderTabs();return;}
+    setTab(TABS[Math.round(p.f)]);
+  }
+  tabs.addEventListener('pointerup',function(ev){end(ev,false);});
+  tabs.addEventListener('pointercancel',function(ev){end(ev,true);});
+  /* deslizar el contenido a izquierda o derecha */
+  var sx=0,sy=0,st=0,ok=false;
+  document.addEventListener('touchstart',function(ev){
+    var t=ev.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();
+    ok=ev.touches.length===1&&!state.sheet&&!ev.target.closest('input,textarea,.tabs,.sheet,.grid');
+  },{passive:true});
+  document.addEventListener('touchend',function(ev){
+    if(!ok){return;}ok=false;
+    var t=ev.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Math.abs(dx)>70&&Math.abs(dy)<45&&Math.abs(dx)>Math.abs(dy)*2&&Date.now()-st<700){
+      var i=TABS.indexOf(state.tab)+(dx<0?1:-1);
+      if(i>=0&&i<3){setTab(TABS[i]);}
+    }
+  },{passive:true});
+})();
 
 /* ===== Arranque: base compartida si existe, si no este movil ===== */
 function startLocal(){
