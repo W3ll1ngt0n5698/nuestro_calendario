@@ -18,7 +18,7 @@
 </head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Gloock&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Gloock&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&family=Playfair+Display:wght@400;600&family=Lora:wght@400;500;600&family=Caveat:wght@500;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* Concepto: una agenda de bolsillo para dos. Cabecera con foto y nombres, mensaje del dia,
    y tres pestañas: calendario con cuentas atras, lista de cosas por hacer y cartas con fecha.
@@ -74,10 +74,10 @@ svg.i{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke
 .app{max-width:520px;margin:0 auto;padding-block:22px 120px;display:flex;flex-direction:column;gap:22px}
 
 /* Cabecera */
-.head{display:flex;align-items:center;gap:14px}
+.head{display:flex;align-items:center;gap:10px}
 .avwrap{position:relative;flex:none}
 .avatar{
-  width:84px;height:84px;border-radius:50%;border:3px solid var(--rose);background:var(--rose-soft);
+  width:72px;height:72px;border-radius:50%;border:3px solid var(--rose);background:var(--rose-soft);
   padding:0;overflow:hidden;display:grid;place-items:center;color:var(--rose);
 }
 .avatar img{width:100%;height:100%;object-fit:cover;display:block}
@@ -89,7 +89,7 @@ svg.i{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke
 }
 .badge svg.i{width:14px;height:14px}
 .head-t{min-width:0;flex:1}
-.head-t h1{font:400 30px/1.05 var(--font-display);margin:0;overflow-wrap:anywhere;text-wrap:balance}
+.head-t h1{font:400 26px/1.1 var(--font-display);margin:0;overflow-wrap:break-word;word-break:normal;hyphens:auto;text-wrap:balance}
 .head-t p{margin:6px 0 0;color:var(--muted);font-size:14px}
 .nav{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;padding:0;flex:none;color:var(--ink)}
 .nav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -287,6 +287,76 @@ textarea.big{min-height:200px}
 .login-box p{color:var(--muted);margin:0 0 6px}
 .login-box form{text-align:left}
 .login-box .btn{width:100%;margin-top:18px}
+
+/* ===== Movimiento y respuesta al tocar ===== */
+button,.btn,label.btn,.day,.ev,.cd,.since,.letter,.mini,.tick,.xb,.nav,.fab,.avatar,.types button{
+  transition:transform .16s cubic-bezier(.2,.8,.2,1),background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease,opacity .2s ease;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;
+}
+.btn:active,.mini:active,.nav:active,.avatar:active,.types button:active,.xb:active{transform:scale(.93)}
+.day:active,.ev:active,.cd:active,.since:active,.letter:active,.tabs button:active{transform:scale(.97)}
+.tick:active{transform:scale(.85)}
+.fab:active{transform:scale(.88) rotate(90deg);box-shadow:0 3px 10px rgba(120,20,55,.3)}
+.fab{transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .2s ease}
+.btn.main:active{filter:brightness(.92)}
+.day .n{transition:transform .2s cubic-bezier(.34,1.56,.64,1),background-color .2s}
+.day:active .n{transform:scale(1.18)}
+.tabs button{transition:background-color .25s ease,color .25s ease,transform .16s ease}
+.tick svg{transition:opacity .15s ease,transform .3s cubic-bezier(.34,1.56,.64,1);transform:scale(.4)}
+.tick[aria-pressed="true"] svg{transform:scale(1)}
+.tick.pop{animation:tickpop .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tickpop{0%{transform:scale(.7)}55%{transform:scale(1.22)}100%{transform:scale(1)}}
+.bar i{transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.panel{animation:fadein .28s ease-out}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.scrim{animation:scrimin .22s ease-out}
+@keyframes scrimin{from{opacity:0}to{opacity:1}}
+.sheet{animation:sheetin .38s cubic-bezier(.32,1.2,.4,1)}
+@keyframes sheetin{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+.pill{animation:fadein .3s ease-out}
+.heart-beat{animation:beat .6s ease-out}
+@keyframes beat{0%{transform:scale(1)}30%{transform:scale(1.35)}60%{transform:scale(.95)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
+/* ===== Cristal liquido (se puede quitar en Ajustes) ===== */
+.swatches{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:8px}
+.sw{height:48px;border-radius:14px;border:2px solid transparent;padding:0;position:relative}
+.sw[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 3px var(--bg) inset}
+.sw span{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px;color:#fff;opacity:0}
+.sw[aria-pressed="true"] span{opacity:1}
+.fonts{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.fo{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 14px;min-height:52px}
+.fo[aria-pressed="true"]{border-color:var(--rose);background:var(--rose-soft)}
+.fo b{font-size:20px;font-weight:400;overflow-wrap:anywhere}
+.fo small{color:var(--muted);font-size:12px;flex:none}
+.swrow{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:8px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.swrow p{margin:0;font-size:14px;color:var(--muted)} .swrow strong{display:block;color:var(--ink);font-size:16px}
+.switch{flex:none;width:54px;height:32px;border-radius:16px;border:0;background:var(--line);position:relative;padding:0}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.switch[aria-pressed="true"]{background:var(--rose)}
+.switch[aria-pressed="true"]::after{transform:translateX(22px)}
+.cfg-note{font-size:13px;color:var(--muted);margin:14px 0 0}
+
+html[data-glass="on"]{--surface:rgba(255,255,255,.55);--line:rgba(255,255,255,.75);--gl-shadow:0 8px 28px rgba(60,20,50,.08);--gl-hi:inset 0 1px 0 rgba(255,255,255,.85)}
+html[data-glass="on"][data-mode="dark"]{--surface:rgba(255,255,255,.08);--line:rgba(255,255,255,.15);--gl-shadow:0 8px 28px rgba(0,0,0,.35);--gl-hi:inset 0 1px 0 rgba(255,255,255,.14)}
+html[data-glass="on"] body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(70% 45% at 0% 0%,color-mix(in srgb,var(--rose) 34%,transparent),transparent 70%),
+             radial-gradient(60% 40% at 100% 35%,color-mix(in srgb,var(--sage) 26%,transparent),transparent 70%),
+             radial-gradient(70% 45% at 20% 100%,color-mix(in srgb,var(--gold) 26%,transparent),transparent 70%)}
+html[data-glass="on"] :is(.tabs,.since,.cd,.ev,.letter,.todo,.item,.pill,.nav,.paper,.note-box,.day.has,.swrow,.fo,.avatar){
+  -webkit-backdrop-filter:blur(18px) saturate(1.7);backdrop-filter:blur(18px) saturate(1.7);box-shadow:var(--gl-shadow),var(--gl-hi)}
+html[data-glass="on"] .daily{background:color-mix(in srgb,var(--rose-soft) 62%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.7);backdrop-filter:blur(18px) saturate(1.7);box-shadow:var(--gl-shadow),var(--gl-hi);border:1px solid var(--line)}
+html[data-glass="on"] .note-box{background:color-mix(in srgb,var(--gold-soft) 62%,transparent)}
+html[data-glass="on"] .pill.warn{background:color-mix(in srgb,var(--gold-soft) 70%,transparent)}
+html[data-glass="on"] .tabs button[aria-selected="true"]{box-shadow:0 4px 14px color-mix(in srgb,var(--rose) 45%,transparent),inset 0 1px 0 rgba(255,255,255,.4)}
+html[data-glass="on"] .fab{background:color-mix(in srgb,var(--rose) 82%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.6);backdrop-filter:blur(14px) saturate(1.6);box-shadow:0 10px 26px color-mix(in srgb,var(--rose) 40%,transparent),inset 0 1px 0 rgba(255,255,255,.5)}
+html[data-glass="on"] .sheet{background:color-mix(in srgb,var(--bg) 58%,transparent);-webkit-backdrop-filter:blur(32px) saturate(1.8);backdrop-filter:blur(32px) saturate(1.8);border-color:var(--line);box-shadow:0 -10px 40px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.6)}
+html[data-glass="on"] .scrim{background:color-mix(in srgb,var(--scrim) 70%,transparent)}
+html[data-glass="on"] input[type=text],html[data-glass="on"] input[type=password],html[data-glass="on"] input[type=date],html[data-glass="on"] input[type=time],html[data-glass="on"] textarea{background:color-mix(in srgb,var(--surface) 80%,transparent)}
+html[data-glass="on"] .login-box{background:var(--surface);-webkit-backdrop-filter:blur(24px) saturate(1.7);backdrop-filter:blur(24px) saturate(1.7);border:1px solid var(--line);border-radius:28px;padding:28px 22px;box-shadow:var(--gl-shadow),var(--gl-hi)}
+@media (prefers-reduced-transparency: reduce){html[data-glass="on"] *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
 </style>
 
 <div class="login" id="login" hidden><div class="login-box"><img src="icons/icon-180.png" alt=""><h2>Nuestro calendario</h2><p>Entra con tu correo y tu contraseña.</p><form id="lform"><label for="lemail">Correo</label><input type="text" id="lemail" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off"><label for="lpass">Contraseña</label><input type="password" id="lpass" autocomplete="current-password"><button class="btn main" type="submit">Entrar</button></form><p class="err" id="lerr" role="alert"></p></div></div>
@@ -295,6 +365,7 @@ textarea.big{min-height:200px}
   <header class="head">
     <div class="avwrap" id="avwrap"></div>
     <div class="head-t"><h1 id="hname">Nuestro calendario</h1><p id="hsub"></p></div>
+    <button class="nav" id="cfg" type="button" data-action="cfg" aria-label="Ajustes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     <button class="nav" id="theme" type="button"></button>
   </header>
 
@@ -654,7 +725,7 @@ function renderTodos(){
     h+='<div class="list">'+pend.concat(dn).map(function(t){
       var meta=(t.example?'Ejemplo':'')+(t.example&&t.done?' · ':'')+(t.done&&t.doneOn?'Hecho el '+fmtShort(t.doneOn):'');
       var conf=state.confirmTodo===t.id;
-      return '<div class="todo'+(t.done?' done':'')+'"><button class="tick" type="button" data-action="todo-toggle" data-id="'+esc(t.id)+'" aria-pressed="'+!!t.done+'" aria-label="'+(t.done?'Marcar como pendiente: ':'Marcar como hecho: ')+esc(t.text)+'">'+CHECK+'</button>'+
+      return '<div class="todo'+(t.done?' done':'')+'"><button class="tick'+(state.popId===t.id&&t.done?' pop':'')+'" type="button" data-action="todo-toggle" data-id="'+esc(t.id)+'" aria-pressed="'+!!t.done+'" aria-label="'+(t.done?'Marcar como pendiente: ':'Marcar como hecho: ')+esc(t.text)+'">'+CHECK+'</button>'+
         '<div class="todo-t"><span>'+esc(t.text)+'</span>'+(meta?'<small>'+meta+'</small>':'')+'</div>'+
         (conf?'<div class="conf"><button class="mini danger" type="button" data-action="todo-del-yes" data-id="'+esc(t.id)+'">Borrar</button><button class="mini" type="button" data-action="todo-del-no">No</button></div>':
         '<button class="xb" type="button" data-action="todo-del" data-id="'+esc(t.id)+'" aria-label="Borrar: '+esc(t.text)+'">'+CROSS+'</button>')+'</div>';
@@ -665,6 +736,7 @@ function renderTodos(){
   if(state.todos.some(function(t){return t.example;})){h+=exBox('todos','Las cosas con la etiqueta «Ejemplo» están para que veas cómo queda. Bórralas cuando quieras.');}
   box.innerHTML=h;
   var ni=document.getElementById('todo-in');if(ni){ni.value=cur;}
+  if(state.popId){setTimeout(function(){state.popId=null;},600);}
   var bi=document.getElementById('bar-i');if(bi&&total){bi.style.width=Math.round(done*100/total)+'%';}
 }
 
@@ -709,6 +781,53 @@ function evItem(e){
       '<button class="mini" data-action="edit" data-id="'+esc(e.id)+'">Editar</button><button class="mini danger" data-action="del" data-id="'+esc(e.id)+'">Borrar</button>')+
     '</div></div>';
 }
+
+/* ===== Ajustes: color, letra y cristal (cada movil guarda los suyos) ===== */
+var LOOK_KEY='nuestro-calendario-ajustes';
+var PALETAS={
+  rosa:{n:'Rosa',L:['#C92A5B','#FBDDE6','#FBF2F4','#EBD8DE'],D:['#F2698F','#4B2434','#1B1423','#271D31','#3B2C48']},
+  coral:{n:'Coral',L:['#C9401F','#FCE0D8','#FDF3EF','#F0DDD5'],D:['#FF8566','#4A2519','#1F1512','#2B1E1A','#43302A']},
+  naranja:{n:'Naranja',L:['#B85C00','#FCE6C8','#FDF5EA','#EEDFC8'],D:['#FFB04A','#4A3112','#1D150B','#2A2014','#43331E']},
+  verde:{n:'Verde',L:['#1F7A4C','#D9F0E2','#F0F8F3','#D4E6DB'],D:['#6FD39A','#1C3D2B','#0D1A13','#17271E','#26402F']},
+  turquesa:{n:'Turquesa',L:['#0B7F84','#D2F0F0','#EFF8F8','#D0E6E6'],D:['#4FD1D5','#173B3D','#0C1B1C','#14292B','#214346']},
+  azul:{n:'Azul',L:['#2563EB','#DCE8FF','#F1F5FE','#D9E3F7'],D:['#6EA0FF','#1E2D52','#0F1626','#182238','#263556']},
+  violeta:{n:'Violeta',L:['#6C4DDB','#E7E0FB','#F5F2FD','#E1DBF3'],D:['#A58DFF','#2F2650','#17132A','#221C3A','#352E56']},
+  grafito:{n:'Grafito',L:['#3B3B4F','#E6E6EE','#F3F3F6','#DDDDE6'],D:['#C9C9DD','#34344A','#14141A','#1F1F27','#34343F']}
+};
+var FUENTES={
+  clasica:{n:'Clásica',d:"'Gloock',Georgia,serif",b:"'Figtree',system-ui,sans-serif"},
+  moderna:{n:'Moderna',d:"'Plus Jakarta Sans',system-ui,sans-serif",b:"'Plus Jakarta Sans',system-ui,sans-serif"},
+  redonda:{n:'Redonda',d:"'Nunito',system-ui,sans-serif",b:"'Nunito',system-ui,sans-serif"},
+  elegante:{n:'Elegante',d:"'Playfair Display',Georgia,serif",b:"'Lora',Georgia,serif"},
+  manuscrita:{n:'Manuscrita',d:"'Caveat','Comic Sans MS',cursive",b:"'Quicksand',system-ui,sans-serif"}
+};
+var look={accent:window.DEFAULT_ACCENT||'rosa',font:'clasica',glass:true},memLook=null;
+(function(){
+  var r=null;
+  try{r=localStorage.getItem(LOOK_KEY);}catch(e){}
+  if(r){try{var o=JSON.parse(r);if(o.accent&&PALETAS[o.accent]){look.accent=o.accent;}if(o.font&&FUENTES[o.font]){look.font=o.font;}if(typeof o.glass==='boolean'){look.glass=o.glass;}}catch(e){}}
+})();
+function saveLook(){memLook=look;try{localStorage.setItem(LOOK_KEY,JSON.stringify(look));}catch(e){}}
+function applyLook(){
+  var de=document.documentElement,d=isDark(),P=PALETAS[look.accent]||PALETAS.rosa,F=FUENTES[look.font]||FUENTES.clasica;
+  var set=function(k,v){de.style.setProperty(k,v);},del=function(k){de.style.removeProperty(k);};
+  de.setAttribute('data-mode',d?'dark':'light');
+  de.setAttribute('data-glass',look.glass?'on':'off');
+  if(d){set('--rose',P.D[0]);set('--rose-soft',P.D[1]);set('--bg',P.D[2]);set('--on-rose','#1A0D12');
+    if(look.glass){del('--surface');del('--line');}else{set('--surface',P.D[3]);set('--line',P.D[4]);}}
+  else{set('--rose',P.L[0]);set('--rose-soft',P.L[1]);set('--bg',P.L[2]);set('--on-rose','#FFFFFF');
+    if(look.glass){del('--surface');del('--line');}else{set('--surface','#FFFFFF');set('--line',P.L[3]);}}
+  set('--font-display',F.d);set('--font-body',F.b);
+  var m=document.querySelector('meta[name=theme-color]');if(m){m.setAttribute('content',d?P.D[2]:P.L[0]);}
+}
+function swatchHtml(k){
+  var P=PALETAS[k],on=look.accent===k;
+  return '<button type="button" class="sw" data-action="accent" data-k="'+k+'" aria-pressed="'+on+'" aria-label="'+P.n+'" style="background:'+P.L[0]+'"><span>'+CHECK+'</span></button>';
+}
+function fontHtml(k){
+  var F=FUENTES[k];
+  return '<button type="button" class="fo" data-action="font" data-k="'+k+'" aria-pressed="'+(look.font===k)+'"><b style="font-family:'+F.d.replace(/"/g,'&quot;')+'">Nuestro calendario</b><small>'+F.n+'</small></button>';
+}
 function renderSheet(noFocus){
   var sh=document.getElementById('sheet'),sc=document.getElementById('scrim');
   var s=state.sheet;
@@ -739,6 +858,12 @@ function renderSheet(noFocus){
     h+='<label for="f-since">Fecha</label><input type="date" id="f-since" value="'+esc(state.since)+'">';
     h+='<p class="err" id="ferr" role="alert"></p>';
     h+='<div class="row"><button class="btn main" data-action="save-since">Guardar</button>'+(state.since?'<button class="btn danger" data-action="clear-since">Quitar</button>':'')+'<button class="btn soft" data-action="close">Cancelar</button></div>';
+  }else if(s.mode==='cfg'){
+    h+='<h4 tabindex="-1" id="sh-title">Ajustes</h4><p class="sub">Estos cambios son solo de este móvil: cada uno elige los suyos.</p>';
+    h+='<label>Color</label><div class="swatches">'+Object.keys(PALETAS).map(swatchHtml).join('')+'</div>';
+    h+='<label>Letra</label><div class="fonts">'+Object.keys(FUENTES).map(fontHtml).join('')+'</div>';
+    h+='<label>Aspecto</label><div class="swrow"><div><strong>Efecto cristal</strong><p>Transparencias y desenfoque, como en el iPhone</p></div><button type="button" class="switch" role="switch" data-action="glass" aria-pressed="'+look.glass+'" aria-label="Efecto cristal"></button></div>';
+    h+='<div class="row"><button class="btn main" data-action="close">Listo</button></div>';
   }else if(s.mode==='perfil'){
     var shown=state.draftPhoto!==undefined?state.draftPhoto:state.photo;
     h+='<h4 tabindex="-1" id="sh-title">Vuestros nombres y foto</h4><p class="sub">Salen arriba, en la cabecera.</p>';
@@ -947,6 +1072,7 @@ function fileToDataUrl(file,cb){
 function setPreview(photo){var pv=document.getElementById('pv');if(pv){pv.innerHTML=avatarInner(photo);}}
 
 document.addEventListener('click',function(ev){
+  try{if(navigator.vibrate&&ev.target.closest&&ev.target.closest('button')){navigator.vibrate(8);}}catch(e){}
   var t=ev.target.closest('[data-action]');if(!t){return;}
   var a=t.dataset.action;
   if(a==='prev'||a==='next'){
@@ -992,6 +1118,10 @@ document.addEventListener('click',function(ev){
     else{state.events.filter(function(e){return e.example;}).forEach(function(e){removeEvent(e.id);});}
     render();
   }
+  else if(a==='cfg'){state.sheet={mode:'cfg'};render();}
+  else if(a==='accent'){look.accent=t.dataset.k;saveLook();applyLook();document.querySelectorAll('#sheet [data-action=accent]').forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.k===look.accent));});}
+  else if(a==='font'){look.font=t.dataset.k;saveLook();applyLook();document.querySelectorAll('#sheet [data-action=font]').forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.k===look.font));});}
+  else if(a==='glass'){look.glass=!look.glass;saveLook();applyLook();t.setAttribute('aria-pressed',String(look.glass));}
   else if(a==='perfil'){state.draftPhoto=undefined;state.sheet={mode:'perfil'};render();}
   else if(a==='rm-photo'){state.draftPhoto='';setPreview('');}
   else if(a==='save-perfil'){
@@ -1019,6 +1149,7 @@ document.addEventListener('click',function(ev){
     var cur=state.todos.filter(function(x){return x.id===t.dataset.id;})[0];
     if(cur){
       var nd=!cur.done;
+      if(nd){state.popId=cur.id;}
       var o={};for(var k in cur){o[k]=cur[k];}
       o.done=nd;o.doneOn=nd?ymdOf(todayDate()):'';
       putTodo(o);
@@ -1086,6 +1217,7 @@ function paintThemeBtn(){
   var b=document.getElementById('theme'),d=isDark();
   b.setAttribute('aria-label',d?'Cambiar a modo claro':'Cambiar a modo oscuro');
   b.innerHTML=d?SUN:MOON;
+  applyLook();
 }
 try{var st=localStorage.getItem(THEME_KEY);if(st==='dark'||st==='light'){root.setAttribute('data-theme',st);}}catch(e){}
 document.getElementById('theme').addEventListener('click',function(){
