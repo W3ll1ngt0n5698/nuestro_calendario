@@ -18,7 +18,7 @@
 </head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Gloock&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&family=Playfair+Display:wght@400;600&family=Lora:wght@400;500;600&family=Caveat:wght@500;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* Concepto: una agenda de bolsillo para dos. Cabecera con foto y nombres, mensaje del dia,
    y tres pestañas: calendario con cuentas atras, lista de cosas por hacer y cartas con fecha.
@@ -37,8 +37,8 @@
   --sage-soft:#D3EEE4;
   --on-rose:#FFFFFF;
   --scrim:rgba(30,16,36,.45);
-  --font-display:'Gloock',Georgia,'Times New Roman',serif;
-  --font-body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-display:'Lora',Georgia,'Times New Roman',serif;
+  --font-body:'Lora',Georgia,'Times New Roman',serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -378,6 +378,13 @@ html[data-glass="on"] .tabs .ind{box-shadow:0 4px 16px color-mix(in srgb,var(--r
 .switch:active::after{width:38px}
 .switch[aria-pressed="true"]:active::after{transform:translateX(14px)}
 .switch:active{transform:none}
+
+body,button,input,textarea,select,label,small,strong,em,h1,h2,h3,h4,h5,p,span,b,i{font-family:var(--font-body)}
+.head-t h1,.mhead h2,.sec h3,.panel h3,.sheet h4,.login-box h2,.daily p,.s-n,.cd-n b,.when b,.num{font-family:var(--font-display)}
+html[data-font="manuscrita"] body{font-size-adjust:.46}
+.sheet{touch-action:pan-y}
+.grab{position:relative}
+.grab::after{content:"";position:absolute;left:-60px;right:-60px;top:-14px;bottom:-14px}
 </style>
 
 <div class="login" id="login" hidden><div class="login-box"><img src="icons/icon-180.png" alt=""><h2>Nuestro calendario</h2><p>Entra con tu correo y tu contraseña.</p><form id="lform"><label for="lemail">Correo</label><input type="text" id="lemail" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off"><label for="lpass">Contraseña</label><input type="password" id="lpass" autocomplete="current-password"><button class="btn main" type="submit">Entrar</button></form><p class="err" id="lerr" role="alert"></p></div></div>
@@ -818,11 +825,11 @@ var PALETAS={
   grafito:{n:'Grafito',L:['#3B3B4F','#E6E6EE','#F3F3F6','#DDDDE6'],D:['#C9C9DD','#34344A','#14141A','#1F1F27','#34343F']}
 };
 var FUENTES={
-  clasica:{n:'Clásica',d:"'Gloock',Georgia,serif",b:"'Figtree',system-ui,sans-serif"},
+  clasica:{n:'Clásica',d:"'Lora',Georgia,serif",b:"'Lora',Georgia,serif"},
   moderna:{n:'Moderna',d:"'Plus Jakarta Sans',system-ui,sans-serif",b:"'Plus Jakarta Sans',system-ui,sans-serif"},
   redonda:{n:'Redonda',d:"'Nunito',system-ui,sans-serif",b:"'Nunito',system-ui,sans-serif"},
-  elegante:{n:'Elegante',d:"'Playfair Display',Georgia,serif",b:"'Lora',Georgia,serif"},
-  manuscrita:{n:'Manuscrita',d:"'Caveat','Comic Sans MS',cursive",b:"'Quicksand',system-ui,sans-serif"}
+  elegante:{n:'Elegante',d:"'Playfair Display',Georgia,serif",b:"'Playfair Display',Georgia,serif"},
+  manuscrita:{n:'Manuscrita',d:"'Caveat','Comic Sans MS',cursive",b:"'Caveat','Comic Sans MS',cursive"}
 };
 var look={accent:window.DEFAULT_ACCENT||'rosa',font:'clasica',glass:true},memLook=null;
 (function(){
@@ -840,7 +847,7 @@ function applyLook(){
     if(look.glass){del('--surface');del('--line');}else{set('--surface',P.D[3]);set('--line',P.D[4]);}}
   else{set('--rose',P.L[0]);set('--rose-soft',P.L[1]);set('--bg',P.L[2]);set('--on-rose','#FFFFFF');
     if(look.glass){del('--surface');del('--line');}else{set('--surface','#FFFFFF');set('--line',P.L[3]);}}
-  set('--font-display',F.d);set('--font-body',F.b);
+  set('--font-display',F.d);set('--font-body',F.b);de.setAttribute('data-font',look.font);
   var m=document.querySelector('meta[name=theme-color]');if(m){m.setAttribute('content',d?P.D[2]:P.L[0]);}
 }
 function swatchHtml(k){
@@ -1306,6 +1313,44 @@ function setTab(k){
       if(i>=0&&i<3){setTab(TABS[i]);}
     }
   },{passive:true});
+})();
+
+
+/* ===== Cerrar la ventana deslizando hacia abajo ===== */
+(function(){
+  var sh=document.getElementById('sheet'),sc=document.getElementById('scrim'),d=null;
+  function reset(){sh.style.transition='';sh.style.transform='';sc.style.transition='';sc.style.opacity='';}
+  sh.addEventListener('touchstart',function(ev){
+    if(ev.touches.length!==1){d=null;return;}
+    var t=ev.touches[0],r=sh.getBoundingClientRect();
+    d={y:t.clientY,t:Date.now(),dy:0,active:false,top:(t.clientY-r.top)<70,form:!!ev.target.closest('input,textarea,select')};
+  },{passive:true});
+  sh.addEventListener('touchmove',function(ev){
+    if(!d){return;}
+    var t=ev.touches[0],dy=t.clientY-d.y;
+    if(!d.active){
+      if(sh.scrollTop>0&&!d.top){d.y=t.clientY;d.t=Date.now();return;}
+      if(d.form){return;}
+      if(dy>6){d.active=true;sh.style.transition='none';sc.style.transition='none';}
+      else{return;}
+    }
+    ev.preventDefault();
+    var y=Math.max(0,dy);d.dy=y;
+    sh.style.transform='translateY('+y+'px)';
+    sc.style.opacity=String(Math.max(0,1-y/Math.max(320,sh.offsetHeight)));
+  },{passive:false});
+  function finish(){
+    if(!d){return;}
+    var x=d;d=null;
+    if(!x.active){return;}
+    var v=x.dy/Math.max(1,Date.now()-x.t);
+    sh.style.transition='transform .3s cubic-bezier(.2,.8,.2,1)';sc.style.transition='opacity .3s ease';
+    if(x.dy>110||(v>0.6&&x.dy>40)){
+      sh.style.transform='translateY('+(sh.offsetHeight+40)+'px)';sc.style.opacity='0';
+      setTimeout(function(){reset();state.sheet=null;state.confirm=null;state.draftPhoto=undefined;render();},290);
+    }else{sh.style.transform='';sc.style.opacity='';setTimeout(reset,320);}
+  }
+  sh.addEventListener('touchend',finish);sh.addEventListener('touchcancel',finish);
 })();
 
 /* ===== Arranque: base compartida si existe, si no este movil ===== */
