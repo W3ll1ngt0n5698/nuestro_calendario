@@ -386,6 +386,15 @@ html[data-font="manuscrita"] body{font-size-adjust:.46}
 .sheet{touch-action:pan-y}
 .grab{position:relative}
 .grab::after{content:"";position:absolute;left:-60px;right:-60px;top:-14px;bottom:-14px}
+
+/* Campos de fecha y hora: bien centrados y sin salirse en iPhone */
+input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0;margin-left:0;margin-right:0;text-align:center;text-align-last:center;line-height:1.2}
+input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:center;margin:0 auto;min-width:0}
+input[type=date]::-webkit-datetime-edit,input[type=time]::-webkit-datetime-edit{padding:0}
+.sheet{overflow-x:hidden}
+
+.todo-t[data-action]{cursor:pointer}
+.todo .xb+.xb{margin-left:-6px}
 </style>
 
 <div class="login" id="login" hidden><div class="login-box"><img src="icons/icon-violeta-180.png" alt=""><h2>Nuestro calendario</h2><p>Entra con tu correo y tu contraseña.</p><form id="lform"><label for="lemail">Correo</label><input type="text" id="lemail" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off"><label for="lpass">Contraseña</label><input type="password" id="lpass" autocomplete="current-password"><button class="btn main" type="submit">Entrar</button></form><p class="err" id="lerr" role="alert"></p></div></div>
@@ -757,9 +766,9 @@ function renderTodos(){
       var meta=(t.example?'Ejemplo':'')+(t.example&&t.done?' · ':'')+(t.done&&t.doneOn?'Hecho el '+fmtShort(t.doneOn):'');
       var conf=state.confirmTodo===t.id;
       return '<div class="todo'+(t.done?' done':'')+'"><button class="tick'+(state.popId===t.id&&t.done?' pop':'')+'" type="button" data-action="todo-toggle" data-id="'+esc(t.id)+'" aria-pressed="'+!!t.done+'" aria-label="'+(t.done?'Marcar como pendiente: ':'Marcar como hecho: ')+esc(t.text)+'">'+CHECK+'</button>'+
-        '<div class="todo-t"><span>'+esc(t.text)+'</span>'+(meta?'<small>'+meta+'</small>':'')+'</div>'+
+        '<div class="todo-t" data-action="todo-edit" data-id="'+esc(t.id)+'" role="button" tabindex="0" aria-label="Editar: '+esc(t.text)+'"><span>'+esc(t.text)+'</span>'+(meta?'<small>'+meta+'</small>':'')+'</div>'+
         (conf?'<div class="conf"><button class="mini danger" type="button" data-action="todo-del-yes" data-id="'+esc(t.id)+'">Borrar</button><button class="mini" type="button" data-action="todo-del-no">No</button></div>':
-        '<button class="xb" type="button" data-action="todo-del" data-id="'+esc(t.id)+'" aria-label="Borrar: '+esc(t.text)+'">'+CROSS+'</button>')+'</div>';
+        '<button class="xb" type="button" data-action="todo-edit" data-id="'+esc(t.id)+'" aria-label="Editar: '+esc(t.text)+'">'+PENCIL+'</button><button class="xb" type="button" data-action="todo-del" data-id="'+esc(t.id)+'" aria-label="Borrar: '+esc(t.text)+'">'+CROSS+'</button>')+'</div>';
     }).join('')+'</div>';
   }else{
 
@@ -895,6 +904,13 @@ function renderSheet(noFocus){
     h+='<label>Letra</label><div class="fonts">'+Object.keys(FUENTES).map(fontHtml).join('')+'</div>';
     h+='<label>Aspecto</label><div class="swrow"><div><strong>Efecto cristal</strong></div><button type="button" class="switch" role="switch" data-action="glass" aria-pressed="'+look.glass+'" aria-label="Efecto cristal"></button></div>';
     h+='<div class="row"><button class="btn main" data-action="close">Listo</button></div>';
+  }else if(s.mode==='todo'){
+    var td=state.todos.filter(function(x){return x.id===s.id;})[0];
+    if(!td){state.sheet=null;sh.hidden=true;sc.hidden=true;document.documentElement.style.overflow='';return;}
+    h+='<h4 tabindex="-1" id="sh-title">Editar plan</h4><p class="sub">Cambia el texto y guarda.</p>';
+    h+='<form id="todo-edit-form" autocomplete="off"><label for="f-tt">Plan</label><input type="text" id="f-tt" maxlength="80" value="'+esc(td.text)+'">';
+    h+='<p class="err" id="ferr" role="alert"></p>';
+    h+='<div class="row"><button class="btn main" type="submit">Guardar</button><button type="button" class="btn soft" data-action="close">Cancelar</button></div></form>';
   }else if(s.mode==='perfil'){
     var shown=state.draftPhoto!==undefined?state.draftPhoto:state.photo;
     h+='<h4 tabindex="-1" id="sh-title">Vuestros nombres y foto</h4><p class="sub">Salen arriba, en la cabecera.</p>';
@@ -1187,6 +1203,7 @@ document.addEventListener('click',function(ev){
       if(state.mode!=='cloud'){renderTodos();}
     }
   }
+  else if(a==='todo-edit'){state.sheet={mode:'todo',id:t.dataset.id};state.confirmTodo=null;render();}
   else if(a==='todo-del'){state.confirmTodo=t.dataset.id;renderTodos();}
   else if(a==='todo-del-no'){state.confirmTodo=null;renderTodos();}
   else if(a==='todo-del-yes'){
@@ -1195,6 +1212,14 @@ document.addEventListener('click',function(ev){
 });
 document.addEventListener('submit',function(ev){
   if(ev.target.id==='early-form'){ev.preventDefault();tryEarly();return;}
+  if(ev.target.id==='todo-edit-form'){
+    ev.preventDefault();
+    var cur2=state.todos.filter(function(x){return x.id===state.sheet.id;})[0];
+    var nv=document.getElementById('f-tt').value.trim();
+    if(!nv){document.getElementById('ferr').textContent='Escribe algo para el plan.';return;}
+    if(cur2){var o2={};for(var k2 in cur2){o2[k2]=cur2[k2];}o2.text=nv;o2.example=false;putTodo(o2);}
+    state.sheet=null;render();return;
+  }
   if(ev.target.id!=='todo-form'){return;}
   ev.preventDefault();
   var inp=document.getElementById('todo-in');
@@ -1352,6 +1377,20 @@ function setTab(k){
     }else{sh.style.transform='';sc.style.opacity='';setTimeout(reset,320);}
   }
   sh.addEventListener('touchend',finish);sh.addEventListener('touchcancel',finish);
+})();
+
+
+/* ===== Si la app se queda abierta, se actualiza al cambiar el dia ===== */
+(function(){
+  var last=ymdOf(todayDate());
+  function check(){
+    var n=ymdOf(todayDate());
+    if(n!==last){last=n;try{if(!state.sheet||state.sheet.mode==='day'){renderData();}else{renderTop();renderCountdown();renderUpcoming();renderMonth();renderDaily();}}catch(e){}}
+  }
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){check();}});
+  window.addEventListener('focus',check);
+  window.addEventListener('pageshow',check);
+  setInterval(check,30000);
 })();
 
 /* ===== Arranque: base compartida si existe, si no este movil ===== */
