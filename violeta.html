@@ -395,6 +395,33 @@ input[type=date]::-webkit-datetime-edit,input[type=time]::-webkit-datetime-edit{
 
 .todo-t[data-action]{cursor:pointer}
 .todo .xb+.xb{margin-left:-6px}
+
+/* ===== iOS 26: lente de cristal y botones que se inflan ===== */
+.pager{position:relative;touch-action:pan-y;overflow-x:clip}
+.pager.nofade .panel{animation:none!important}
+.tabs{overflow:visible}
+.tabs button{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--rose)}
+html[data-glass="on"] .tabs button[aria-selected="true"]{color:var(--rose)}
+.tabs .ind,html[data-glass="on"] .tabs .ind{
+  --p:0;transform:translateX(calc(var(--p)*100%)) scale(var(--sx,1),var(--sy,1));transform-origin:center;
+  transition:transform .55s cubic-bezier(.34,1.45,.5,1),background-color .3s,box-shadow .3s;
+  background:color-mix(in srgb,var(--rose) 13%,rgba(255,255,255,.28));
+  border:1px solid rgba(255,255,255,.55);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.85),inset 0 -2px 4px color-mix(in srgb,var(--rose) 14%,transparent),0 2px 8px rgba(0,0,0,.08)}
+.tabs.press .ind,html[data-glass="on"] .tabs.press .ind{
+  background:color-mix(in srgb,var(--rose) 7%,rgba(255,255,255,.22));
+  -webkit-backdrop-filter:saturate(2.1) brightness(1.1) blur(1.5px);backdrop-filter:saturate(2.1) brightness(1.1) blur(1.5px);
+  box-shadow:inset 0 2px 2px rgba(255,255,255,.95),inset 0 -3px 6px color-mix(in srgb,var(--rose) 22%,transparent),0 10px 26px rgba(0,0,0,.18)}
+html[data-mode="dark"] .tabs .ind{border-color:rgba(255,255,255,.22);background:color-mix(in srgb,var(--rose) 20%,rgba(255,255,255,.08))}
+.tabs.drag .ind{transition:none}
+.tabs.drag .ind,.tabs.press .ind{will-change:transform}
+.nav,.fab,.avatar,.tick,.mini,.btn,.types button,.xb,.tabs button{transition:transform .4s cubic-bezier(.34,1.56,.5,1),background-color .2s ease,border-color .2s ease,color .2s ease,box-shadow .25s ease,filter .2s ease,opacity .2s ease}
+.nav:active,.avatar:active,.xb:active{transform:scale(1.15);filter:brightness(1.12) saturate(1.15)}
+.btn:active,.mini:active,.types button:active{transform:scale(1.05);filter:brightness(1.1) saturate(1.1)}
+.tick:active{transform:scale(1.18)}
+.fab:active{transform:scale(1.15);filter:brightness(1.1)}
+.tabs button:active{transform:scale(1.06)}
 </style>
 
 <div class="login" id="login" hidden><div class="login-box"><img src="icons/icon-violeta-180.png" alt=""><h2>Nuestro calendario</h2><p>Entra con tu correo y tu contraseña.</p><form id="lform"><label for="lemail">Correo</label><input type="text" id="lemail" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off"><label for="lpass">Contraseña</label><input type="password" id="lpass" autocomplete="current-password"><button class="btn main" type="submit">Entrar</button></form><p class="err" id="lerr" role="alert"></p></div></div>
@@ -413,6 +440,7 @@ input[type=date]::-webkit-datetime-edit,input[type=time]::-webkit-datetime-edit{
 
   <div class="tabs" role="tablist" id="tabs" aria-label="Secciones"><i class="ind" id="ind"></i><div class="tabbtns" id="tabbtns"></div></div>
 
+  <div class="pager" id="pager">
   <section class="panel" id="p-cal" role="tabpanel">
     <div class="sec" id="cd"></div>
 
@@ -438,6 +466,7 @@ input[type=date]::-webkit-datetime-edit,input[type=time]::-webkit-datetime-edit{
 
   <section class="panel" id="p-lista" role="tabpanel" hidden></section>
   <section class="panel" id="p-cartas" role="tabpanel" hidden></section>
+  </div>
 
   <p class="foot">Hecho a mano, solo para ti <svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21l-1.4-1.3C5.4 15 2 11.9 2 8.1 2 5 4.4 2.6 7.5 2.6c1.7 0 3.4.8 4.5 2.1 1.1-1.3 2.8-2.1 4.5-2.1 3.1 0 5.5 2.4 5.5 5.5 0 3.8-3.4 6.9-8.6 11.6z"/></svg></p>
 </div>
@@ -668,7 +697,7 @@ function renderTabs(){
       (d[0]==='cartas'&&u?'<span class="pip" aria-label="'+u+(u>1?' cartas nuevas':' carta nueva')+'"></span>':'')+'</button>';
   }).join('');
   var ix=['cal','lista','cartas'].indexOf(state.tab);
-  if(!tabDrag){document.getElementById('ind').style.transform='translateX('+(ix*100)+'%)';}
+  if(!tabDrag&&!pgBusy){document.getElementById('ind').style.setProperty('--p',String(ix));}
   document.getElementById('p-cal').hidden=state.tab!=='cal';
   document.getElementById('p-lista').hidden=state.tab!=='lista';
   document.getElementById('p-cartas').hidden=state.tab!=='cartas';
@@ -1306,39 +1335,26 @@ function setTab(k){
   }
   tabs.addEventListener('pointerdown',function(ev){
     if(ev.button>0){return;}
-    tabDrag={x:ev.clientX,moved:false,id:ev.pointerId};
+    tabDrag={x:ev.clientX,moved:false,id:ev.pointerId,lx:ev.clientX,lt:Date.now()};
+    pressLens(true,null);
     try{tabs.setPointerCapture(ev.pointerId);}catch(e){}
   });
   tabs.addEventListener('pointermove',function(ev){
     if(!tabDrag){return;}
     if(!tabDrag.moved&&Math.abs(ev.clientX-tabDrag.x)>6){tabDrag.moved=true;tabs.classList.add('drag');}
-    if(tabDrag.moved){var p=pos(ev),n=Math.round(p.f);ind.style.transform='translateX('+(p.f*100)+'%)';
+    if(tabDrag.moved){var nowT=Date.now(),vv=(ev.clientX-tabDrag.lx)/Math.max(1,nowT-tabDrag.lt);tabDrag.lx=ev.clientX;tabDrag.lt=nowT;ind.style.setProperty('--sx',String(1.16+Math.min(.22,Math.abs(vv)*.18)));var p=pos(ev),n=Math.round(p.f);ind.style.setProperty('--p',String(p.f));pressLens(true,p.f);
       document.querySelectorAll('#tabbtns button').forEach(function(bt,i){bt.setAttribute('aria-selected',String(i===n));});}
   });
   function end(ev,cancel){
     if(!tabDrag){return;}
     var p=pos(ev),was=tabDrag;tabDrag=null;
-    tabs.classList.remove('drag');
+    tabs.classList.remove('drag');pressLens(false);
     try{tabs.releasePointerCapture(was.id);}catch(e){}
     if(cancel){renderTabs();return;}
     setTab(TABS[Math.round(p.f)]);
   }
   tabs.addEventListener('pointerup',function(ev){end(ev,false);});
   tabs.addEventListener('pointercancel',function(ev){end(ev,true);});
-  /* deslizar el contenido a izquierda o derecha */
-  var sx=0,sy=0,st=0,ok=false;
-  document.addEventListener('touchstart',function(ev){
-    var t=ev.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();
-    ok=ev.touches.length===1&&!state.sheet&&!ev.target.closest('input,textarea,.tabs,.sheet,.grid');
-  },{passive:true});
-  document.addEventListener('touchend',function(ev){
-    if(!ok){return;}ok=false;
-    var t=ev.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
-    if(Math.abs(dx)>70&&Math.abs(dy)<45&&Math.abs(dx)>Math.abs(dy)*2&&Date.now()-st<700){
-      var i=TABS.indexOf(state.tab)+(dx<0?1:-1);
-      if(i>=0&&i<3){setTab(TABS[i]);}
-    }
-  },{passive:true});
 })();
 
 
@@ -1391,6 +1407,81 @@ function setTab(k){
   window.addEventListener('focus',check);
   window.addEventListener('pageshow',check);
   setInterval(check,30000);
+})();
+
+
+/* ===== Pastilla de cristal (como en iOS) y paginas que siguen al dedo ===== */
+var pgBusy=false;
+function pressLens(on){
+  var ind=document.getElementById('ind'),tb=document.getElementById('tabs');
+  tb.classList.toggle('press',!!on);
+  if(on){ind.style.setProperty('--sx','1.16');ind.style.setProperty('--sy','1.3');}
+  else{ind.style.removeProperty('--sx');ind.style.removeProperty('--sy');}
+}
+(function(){
+  var pager=document.getElementById('pager'),ind=document.getElementById('ind'),GAP=24,P={on:false};
+  function pan(k){return document.getElementById('p-'+k);}
+  function clean(el){if(!el){return;}['position','top','left','width','transform','transition','animation'].forEach(function(k){el.style[k]='';});}
+  function markNearest(f){
+    var n=Math.max(0,Math.min(2,Math.round(f)));
+    document.querySelectorAll('#tabbtns button').forEach(function(bt,i){bt.setAttribute('aria-selected',String(i===n));});
+  }
+  function setNb(dir){
+    if(P.dir===dir){return;}
+    if(P.nb){P.nb.hidden=true;clean(P.nb);P.nb=null;}
+    P.dir=dir;
+    var j=P.idx+dir;
+    if(j<0||j>2){return;}
+    var nb=pan(TABS[j]);
+    nb.hidden=false;nb.style.animation='none';nb.style.position='absolute';nb.style.top='0';nb.style.left='0';nb.style.width='100%';nb.style.transition='none';
+    P.nb=nb;
+  }
+  pager.addEventListener('touchstart',function(ev){
+    if(pgBusy||ev.touches.length!==1||state.sheet||ev.target.closest('input,textarea')){P={on:false};return;}
+    var t=ev.touches[0];
+    P={on:true,x:t.clientX,y:t.clientY,lx:t.clientX,lt:Date.now(),v:0,mode:0,dir:0,nb:null,cx:0};
+  },{passive:true});
+  pager.addEventListener('touchmove',function(ev){
+    if(!P.on){return;}
+    var t=ev.touches[0],dx=t.clientX-P.x,dy=t.clientY-P.y;
+    if(!P.mode){
+      if(Math.abs(dx)<8&&Math.abs(dy)<8){return;}
+      if(Math.abs(dx)>Math.abs(dy)*1.3){
+        P.mode=1;P.idx=TABS.indexOf(state.tab);P.w=pager.getBoundingClientRect().width;P.cur=pan(state.tab);
+        P.cur.style.animation='none';P.cur.style.transition='none';pgBusy=true;
+        ind.style.transition='none';
+      }else{P.on=false;return;}
+    }
+    ev.preventDefault();
+    var now=Date.now();P.v=(t.clientX-P.lx)/Math.max(1,now-P.lt);P.lx=t.clientX;P.lt=now;
+    var dir=dx<0?1:-1,j=P.idx+dir,x=dx;
+    setNb(dir);
+    if(j<0||j>2){x=dx*0.28;}
+    P.cx=x;
+    P.cur.style.transform='translateX('+x+'px)';
+    if(P.nb){P.nb.style.transform='translateX('+(x+dir*(P.w+GAP))+'px)';}
+    var f=Math.max(0,Math.min(2,P.idx-x/(P.w+GAP)));
+    ind.style.setProperty('--p',String(f));markNearest(f);
+  },{passive:false});
+  function end(){
+    if(!P.on||P.mode!==1){P={on:false};return;}
+    var dir=P.dir,j=P.idx+dir,x=P.cx,w=P.w+GAP;
+    var go=(j>=0&&j<=2)&&(Math.abs(x)>P.w*0.28||(Math.abs(P.v)>0.45&&Math.abs(x)>36&&Math.sign(P.v)===-dir));
+    var tIdx=go?j:P.idx,cur=P.cur,nb=P.nb;
+    var tr='transform .5s cubic-bezier(.32,.72,0,1)';
+    cur.style.transition=tr;cur.style.transform='translateX('+(go?-dir*w:0)+'px)';
+    if(nb){nb.style.transition=tr;nb.style.transform='translateX('+(go?0:dir*w)+'px)';}
+    ind.style.transition='';ind.style.setProperty('--p',String(tIdx));markNearest(tIdx);
+    P={on:false};
+    setTimeout(function(){
+      pager.classList.add('nofade');
+      clean(cur);if(nb){clean(nb);}
+      if(go){setTab(TABS[tIdx]);}else{if(nb){nb.hidden=true;}renderTabs();}
+      pgBusy=false;
+      requestAnimationFrame(function(){requestAnimationFrame(function(){pager.classList.remove('nofade');});});
+    },520);
+  }
+  pager.addEventListener('touchend',end);pager.addEventListener('touchcancel',end);
 })();
 
 /* ===== Arranque: base compartida si existe, si no este movil ===== */
